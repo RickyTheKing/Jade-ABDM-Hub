@@ -1,0 +1,173 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local StarterGui = game:GetService("StarterGui")
+local UserInputService = game:GetService("UserInputService")
+
+local notificationsSent = false
+local guiCreated = false
+
+local function Notifications()
+	if not notificationsSent then
+		StarterGui:SetCore("SendNotification", {
+			Title = "Jade ABDM Hub";
+			Text = "Made By RickyDevKing";
+			Duration = 5;
+		})
+
+		task.wait(6)
+
+		StarterGui:SetCore("SendNotification", {
+			Title = "Controls";
+			Text = "Press Left Alt to disable and enable the GUI.";
+			Duration = 5;
+		})
+
+		notificationsSent = true
+	end
+end
+
+local function JadeHub()
+	if guiCreated then
+		return
+	end
+
+	local ScreenGui = PlayerGui:FindFirstChild("JadeHub")
+	if not ScreenGui then
+		ScreenGui = Instance.new("ScreenGui")
+		ScreenGui.Name = "JadeHub"
+		ScreenGui.Parent = PlayerGui
+	end
+
+	local Frame = Instance.new("Frame")
+	Frame.Size = UDim2.new(0, 600, 0, 400)
+	Frame.Position = UDim2.new(0.5, -300, 0.5, -200)
+	Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	Frame.BackgroundTransparency = 0.2
+	Frame.Parent = ScreenGui
+
+	local Gradient = Instance.new("UIGradient")
+	Gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 50, 50)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+	})
+	Gradient.Parent = Frame
+
+	local UICorner = Instance.new("UICorner")
+	UICorner.CornerRadius = UDim.new(0, 12)
+	UICorner.Parent = Frame
+
+	local UIStroke = Instance.new("UIStroke")
+	UIStroke.Thickness = 2
+	UIStroke.Color = Color3.fromRGB(255, 255, 255)
+	UIStroke.Parent = Frame
+
+	local TitleLabel = Instance.new("TextLabel")
+	TitleLabel.Size = UDim2.new(1, 0, 0.2, 0)
+	TitleLabel.Position = UDim2.new(0, 0, 0, 0)
+	TitleLabel.Text = "Jade ABDM Hub"
+	TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	TitleLabel.BackgroundColor3 = Color3.fromRGB(84, 84, 84)
+	TitleLabel.BackgroundTransparency = 0.4
+	TitleLabel.Font = Enum.Font.SourceSansBold
+	TitleLabel.TextSize = 32
+	TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
+	TitleLabel.TextYAlignment = Enum.TextYAlignment.Center
+	TitleLabel.TextStrokeTransparency = 0.6
+	TitleLabel.TextStrokeColor3 = Color3.fromRGB(170, 85, 255)
+	TitleLabel.Parent = Frame
+
+	local TitleLabelUICorner = Instance.new("UICorner")
+	TitleLabelUICorner.CornerRadius = UDim.new(0, 12)
+	TitleLabelUICorner.Parent = TitleLabel
+
+	local ScrollingFrame = Instance.new("ScrollingFrame")
+	ScrollingFrame.Size = UDim2.new(1, 0, 0.8, 0)
+	ScrollingFrame.Position = UDim2.new(0, 0, 0.2, 0)
+	ScrollingFrame.BackgroundTransparency = 1
+	ScrollingFrame.ScrollBarThickness = 6
+	ScrollingFrame.Parent = Frame
+
+	local UIListLayout = Instance.new("UIListLayout")
+	UIListLayout.Padding = UDim.new(0, 10)
+	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	UIListLayout.Parent = ScrollingFrame
+
+	local TradeHackButton = Instance.new("TextButton")
+	TradeHackButton.Size = UDim2.new(1, 0, 0.2, 0)
+	TradeHackButton.Text = "Trade Hack"
+	TradeHackButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	TradeHackButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	TradeHackButton.BackgroundTransparency = 0.3
+	TradeHackButton.Font = Enum.Font.SourceSans
+	TradeHackButton.TextSize = 24
+	TradeHackButton.TextXAlignment = Enum.TextXAlignment.Center
+	TradeHackButton.TextYAlignment = Enum.TextYAlignment.Center
+	TradeHackButton.Parent = ScrollingFrame
+
+	local TradeHackButtonUICorner = Instance.new("UICorner")
+	TradeHackButtonUICorner.CornerRadius = UDim.new(0, 12)
+	TradeHackButtonUICorner.Parent = TradeHackButton
+
+	local featureEnabled = false
+
+	local function ToggleFeature()
+		featureEnabled = not featureEnabled
+
+		if featureEnabled then
+			TradeHackButton.Text = "Trade Hack Enabled"
+			TradeHackButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+		else
+			TradeHackButton.Text = "Trade Hack Disabled"
+			TradeHackButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+		end
+	end
+
+	TradeHackButton.MouseButton1Click:Connect(ToggleFeature)
+
+	local function Name(PlayerName)
+		for _, V in ipairs(Players:GetPlayers()) do
+			if V.Name:lower():sub(1, #PlayerName) == PlayerName:lower() then
+				return V
+			end
+		end
+		return nil
+	end
+
+	local function Chat(Message)
+		local Command = Message:lower()
+
+		if Command:sub(1, 1) ~= "!" then return end
+		Command = Command:sub(2)
+
+		local Words = {}
+		for Word in string.gmatch(Command, "%S+") do
+			table.insert(Words, Word)
+		end
+
+		if Words[1] == "trade" and Words[2] then
+			local TargetPlayer = Name(Words[2])
+			if TargetPlayer and TargetPlayer ~= Player then
+				if featureEnabled then
+					ReplicatedStorage.Trade:FireServer(TargetPlayer)
+				end
+			end
+		end
+	end
+
+	Player.Chatted:Connect(Chat)
+
+	local function ToggleGUI(input)
+		if input.KeyCode == Enum.KeyCode.LeftAlt then
+			ScreenGui.Enabled = not ScreenGui.Enabled
+		end
+	end
+
+	UserInputService.InputBegan:Connect(ToggleGUI)
+
+	guiCreated = true
+end
+
+Notifications()
+JadeHub() 
