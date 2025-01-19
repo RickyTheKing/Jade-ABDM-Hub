@@ -1,6 +1,6 @@
 local Players = game.Players
 local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Character = LocalPlayer.Character
 local ItemFolder = game.Workspace:WaitForChild("Item")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local UserInputService = game:GetService("UserInputService")
@@ -80,6 +80,14 @@ local function SellItems()
     end
 end
 
+local function BreakthroughAction()
+    ReplicatedStorage.GlobalUsedRemotes.Breakthrough:FireServer()
+end
+
+local function UpgradeMasAction()
+    ReplicatedStorage.GlobalUsedRemotes.UpgradeMas:FireServer()
+end
+
 local function ShowNotification(title, message, duration)
     game:GetService("StarterGui"):SetCore("SendNotification", {Title = title, Text = message, Duration = duration})
 end
@@ -110,6 +118,9 @@ while true do
                     task.wait(1.5)
                     PressKey(Key1)
                     task.wait(1)
+
+                    BreakthroughAction()
+                    UpgradeMasAction()
                 end
             elseif Teleported then
                 ReleaseKey(Key1)
