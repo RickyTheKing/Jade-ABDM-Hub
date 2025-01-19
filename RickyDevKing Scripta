@@ -47,10 +47,13 @@ end
 
 local function FindItems()
 	local Items, GoodItems = ItemFolder:GetChildren(), {}
-	local chestKeyExists = CheckKey()
+	local chestKeyExists, chestKeyItem = CheckKey()
+
 	for _, Item in ipairs(Items) do
 		if Item:IsA("BasePart") then
-			if chestKeyExists and Item.Name == "Chest" or not chestKeyExists and Item.Name == "Box" then
+			if chestKeyExists and Item.Name == "Chest" then
+				table.insert(GoodItems, Item)
+			elseif not chestKeyExists and Item.Name == "Box" then
 				table.insert(GoodItems, Item)
 			end
 		end
