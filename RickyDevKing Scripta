@@ -6,7 +6,7 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Teleported, Enabled, Target, LastTeleported = false, false, nil, 0
+local Teleported, Active, Target, LastTeleported = false, false, nil, 0
 
 local Items = {
 	"Arrow", "Bari Bari Devil Fruit", "Barrel", "Bomu Bomu Devil Fruit", 
@@ -26,7 +26,7 @@ local Key2 = Enum.KeyCode.Z
 local GoodItems = {}
 local ChestKeys = {}
 
-local function StartUp()
+local function InitializeCharacter()
 	local Character = LocalPlayer.Character
 	if Character then
 		Teleported, Target, LastTeleported = false, nil, 0
@@ -45,7 +45,10 @@ end
 local function EquipKey(Item)
 	local Character = LocalPlayer.Character
 	if Item and Character and not Character:FindFirstChild(Item.Name) then
-		Character:WaitForChild("Humanoid"):EquipTool(Item)
+		local humanoid = Character:FindFirstChild("Humanoid")
+		if humanoid then
+			Item.Parent = LocalPlayer.Backpack
+		end
 	end
 end
 
@@ -72,7 +75,7 @@ local function FindItems()
 		if Item:IsA("BasePart") then
 			if #ChestKeys > 0 and Item.Name == "Chest" then
 				table.insert(GoodItems, Item)
-			elseif #ChestKeys == 0 and (Item.Name == "Box" or Item.Name == "Barrel" or Item.Name == "Loot" or Item.Name == "Rare Loot" or Item.Name == "Unusual Loot" or Item.Name == "Fantastic Loot" or Item.Name == "Exotic Loot" or Item.Name == "Cyber Loot") then
+			elseif #ChestKeys == 0 and (Item.Name == "Box" or Item.Name == "Barrel" or Item.Name == "BoxDrop1" or Item.Name == "BoxDrop2" or Item.Name == "BoxDrop3" or Item.Name == "BoxDrop4" or Item.Name == "BoxDrop5" or Item.Name == "BoxDrop6")  or Item.Name == "SukunaFinger") then
 				table.insert(GoodItems, Item)
 			elseif Item.Name == "New Item" then
 				table.insert(GoodItems, Item)
@@ -103,8 +106,8 @@ local function UpgradeMastery()
 	ReplicatedStorage.GlobalUsedRemotes.UpgradeMas:FireServer()
 end
 
-local function Noti(Title2, Msg, Time)
-	game:GetService("StarterGui"):SetCore("SendNotification", {Title = Title2, Text = Msg, Time2 = Time})
+local function ShowNotification(title, message, duration)
+	game:GetService("StarterGui"):SetCore("SendNotification", {Title = title, Text = message, Duration = duration})
 end
 
 local function FindNpc()
@@ -150,20 +153,20 @@ end
 
 UserInputService.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Key2 then
-		Enabled = not Enabled
-		local State = Enabled and "Activated" or "Deactivated"
-		Noti("Script " .. State, "Press 'Z' again to " .. (Enabled and "stop" or "start") .. ".", 5)
+		Active = not Active
+		local state = Active and "Activated" or "Deactivated"
+		ShowNotification("Script " .. state, "Press 'Z' again to " .. (Active and "stop" or "start") .. ".", 5)
 	end
 end)
 
-Noti("Sakura Stand Farming Script 2025", "Made by RickyDevKing", 5)
+ShowNotification("Sakura Stand Farming Script 2025", "Made by RickyDevKing", 5)
 
 LocalPlayer.CharacterAdded:Connect(function()
-	StartUp()
+	InitializeCharacter()
 end)
 
 while true do
-	if Enabled then
+	if Active then
 		local Npc = FindNpc()
 
 		if Npc then
