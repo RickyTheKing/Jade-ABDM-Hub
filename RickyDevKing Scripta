@@ -2,215 +2,132 @@ local Players = game.Players
 local LocalPlayer = Players.LocalPlayer
 local ItemFolder = game.Workspace:WaitForChild("Item")
 local LivingFolder = game.Workspace:WaitForChild("Living")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local UserInputService = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Teleported, Active, Target, LastTeleported = false, false, nil, 0
+local Teleported, Active, LastTeleported = false, false, 0
+local Items = {"Arrow", "Bari Bari Devil Fruit", "Barrel", "Bomu Bomu Devil Fruit", 
+               "Mysterious Camera", "Hamon Manual", "Haunted Sword", "Mochi Mochi Devil Fruit", 
+               "Rokakaka", "Spin Manual", "Stop Sign", "Stone Mask", "New Item"}
 
-local Items = {
-	"Arrow", "Bari Bari Devil Fruit", "Barrel", "Bomu Bomu Devil Fruit", 
-	"Mysterious Camera", "Hamon Manual", "Haunted Sword", "Mochi Mochi Devil Fruit", 
-	"Rokakaka", "Spin Manual", "Stop Sign", "Stone Mask", "New Item"
-}
-
-local Npcs = {
-	"Thug", "Bandit", "Glutton Curse", "Mosquito Curse", 
-	"Contorted Curse", "Spider Curse", "Paper Curse", "Frog Hollow", "Fishbone"
-}
+local Npcs = {"Thug", "Bandit", "Glutton Curse", "Mosquito Curse", "Contorted Curse", 
+              "Spider Curse", "Paper Curse", "Frog Hollow", "Fishbone"}
 
 local ChestKey = "Chest Key"
-local Key1 = Enum.KeyCode.E
-local Key2 = Enum.KeyCode.Z
+local Key1, Key2 = Enum.KeyCode.E, Enum.KeyCode.Z
 
-local GoodItems = {}
-local ChestKeys = {}
-
-local function InitializeCharacter()
-	local Character = LocalPlayer.Character
-	if Character then
-		Teleported, Target, LastTeleported = false, nil, 0
-	end
+local function ShowNotification(title, message, duration)
+    game:GetService("StarterGui"):SetCore("SendNotification", {Title = title, Text = message, Duration = duration})
 end
 
-local function CheckKey()
-	for _, Item in ipairs(LocalPlayer.Backpack:GetChildren()) do
-		if Item:IsA("Tool") and Item.Name == ChestKey then
-			table.insert(ChestKeys, Item)
-		end
-	end
-	return ChestKeys
+local function EquipChestKey()
+    local chestKey = LocalPlayer.Backpack:FindFirstChild(ChestKey)
+    if chestKey and not LocalPlayer.Character:FindFirstChild(ChestKey) then
+        chestKey.Parent = LocalPlayer.Backpack
+    end
 end
 
-local function EquipKey(Item)
-	local Character = LocalPlayer.Character
-	if Item and Character and not Character:FindFirstChild(Item.Name) then
-		local humanoid = Character:FindFirstChild("Humanoid")
-		if humanoid then
-			Item.Parent = LocalPlayer.Backpack
-		end
-	end
-end
-
-local function Teleport(G)
-	local Character = LocalPlayer.Character
-	if G and Character then
-		Character:SetPrimaryPartCFrame(G.CFrame)
-		Teleported, Target, LastTeleported = true, G, tick()
-	end
+local function TeleportToPosition(Position)
+    local Character = LocalPlayer.Character
+    if Position and Character then
+        Character:SetPrimaryPartCFrame(Position.CFrame)
+        Teleported = true
+    end
 end
 
 local function PressKey(key)
-	VirtualInputManager:SendKeyEvent(true, key, false, game)
+    VirtualInputManager:SendKeyEvent(true, key, false, game)
 end
 
 local function ReleaseKey(key)
-	VirtualInputManager:SendKeyEvent(false, key, false, game)
-end
-
-local function FindItems()
-	local ChestKeys = CheckKey()
-
-	for _, Item in ipairs(ItemFolder:GetChildren()) do
-		if Item:IsA("BasePart") then
-			-- Only add chests to the list if the player has the Chest Key
-			if #ChestKeys > 0 and Item.Name == "Chest" then
-				table.insert(GoodItems, Item)
-			-- Add other valid items to the list regardless of having the Chest Key
-			elseif #ChestKeys == 0 and (Item.Name == "Box" or Item.Name == "Barrel" or Item.Name == "BoxDrop1" or Item.Name == "BoxDrop2" or Item.Name == "BoxDrop3" or Item.Name == "BoxDrop4" or Item.Name == "BoxDrop5" or Item.Name == "BoxDrop6" or Item.Name == "SukunaFinger") then
-				table.insert(GoodItems, Item)
-			elseif Item.Name == "New Item" then
-				table.insert(GoodItems, Item)
-			end
-		end
-	end
-	return GoodItems
-end
-
-local function SellItems()
-	for _, Item in ipairs(LocalPlayer.Backpack:GetChildren()) do
-		if Item:IsA("Tool") then
-			for _, validItemName in ipairs(Items) do
-				if Item.Name == validItemName then
-					ReplicatedStorage.GlobalUsedRemotes.SellItem:FireServer(Item.Name)
-					break
-				end
-			end
-		end
-	end
-end
-
-local function BreakThroughMastery()
-	ReplicatedStorage.GlobalUsedRemotes.Breakthrough:FireServer()
-end
-
-local function UpgradeMastery()
-	ReplicatedStorage.GlobalUsedRemotes.UpgradeMas:FireServer()
-end
-
-local function ShowNotification(title, message, duration)
-	game:GetService("StarterGui"):SetCore("SendNotification", {Title = title, Text = message, Duration = duration})
+    VirtualInputManager:SendKeyEvent(false, key, false, game)
 end
 
 local function FindNpc()
-	for _, Npc in ipairs(LivingFolder:GetChildren()) do
-		if Npc:IsA("Model") and table.find(Npcs, Npc.Name) then
-			return Npc
-		end
-	end
-	return nil
+    for _, npc in ipairs(LivingFolder:GetChildren()) do
+        if npc:IsA("Model") and table.find(Npcs, npc.Name) then
+            return npc
+        end
+    end
 end
 
-local function SkillKeys()
-	local Keys = {Enum.KeyCode.Q, Enum.KeyCode.E, Enum.KeyCode.R, Enum.KeyCode.T, Enum.KeyCode.Y,
-		Enum.KeyCode.U, Enum.KeyCode.G, Enum.KeyCode.H, Enum.KeyCode.J, Enum.KeyCode.B, Enum.KeyCode.N}
-
-	for _, Key in ipairs(Keys) do
-		PressKey(Key)
-		task.wait()
-		ReleaseKey(Key)
-	end
+local function FindValidItems()
+    local validItems = {}
+    for _, item in ipairs(ItemFolder:GetChildren()) do
+        if item:IsA("BasePart") and (item.Name == "Chest" or item.Name:match("Box") or 
+           item.Name == "SukunaFinger" or item.Name == "New Item") then
+            table.insert(validItems, item)
+        end
+    end
+    return validItems
 end
 
-local function TeleportToNpc(Npc)
-	if Npc and Npc.PrimaryPart then
-		local humanoid = Npc:FindFirstChild("Humanoid")
-		if humanoid and humanoid.Health > 0 then
-			Teleport(Npc.PrimaryPart)
-			task.wait()
-			SkillKeys()
-		end
-	end
+local function SellValidItems()
+    for _, item in ipairs(LocalPlayer.Backpack:GetChildren()) do
+        if item:IsA("Tool") and table.find(Items, item.Name) then
+            ReplicatedStorage.GlobalUsedRemotes.SellItem:FireServer(item.Name)
+        end
+    end
 end
 
-local function ReturnToItemLocation()
-	local CorrectItems = FindItems()
-	if #CorrectItems > 0 then
-		local RandomItem = CorrectItems[math.random(1, #CorrectItems)]
-		if RandomItem and RandomItem ~= Target then
-			Teleport(RandomItem)
-		end
-	end
+local function UseSkills()
+    local keys = {Enum.KeyCode.Q, Enum.KeyCode.E, Enum.KeyCode.R, Enum.KeyCode.T, Enum.KeyCode.Y,
+                  Enum.KeyCode.U, Enum.KeyCode.G, Enum.KeyCode.H, Enum.KeyCode.J, Enum.KeyCode.B, Enum.KeyCode.N}
+    for _, key in ipairs(keys) do
+        PressKey(key)
+        task.wait(0.1)
+        ReleaseKey(key)
+    end
+end
+
+local function TeleportAndAttackNpc(npc)
+    if npc and npc.PrimaryPart then
+        local humanoid = npc:FindFirstChild("Humanoid")
+        if humanoid and humanoid.Health > 0 then
+            TeleportToPosition(npc.PrimaryPart)
+            task.wait()
+            UseSkills()
+        end
+    end
 end
 
 UserInputService.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Key2 then
-		Active = not Active
-		local state = Active and "Activated" or "Deactivated"
-		ShowNotification("Script " .. state, "Press 'Z' again to " .. (Active and "stop" or "start") .. ".", 5)
-	end
+    if input.KeyCode == Key2 then
+        Active = not Active
+        ShowNotification("Script " .. (Active and "Activated" or "Deactivated"), 
+                         "Press 'Z' again to " .. (Active and "stop" or "start") .. ".", 5)
+    end
 end)
 
 ShowNotification("Sakura Stand Farming Script 2025", "Made by RickyDevKing", 5)
 
-LocalPlayer.CharacterAdded:Connect(function()
-	InitializeCharacter()
-end)
-
 while true do
-	if Active then
-		local Npc = FindNpc()
+    if Active then
+        local npc = FindNpc()
+        if npc then
+            while npc.Parent and npc.Parent == LivingFolder do
+                TeleportAndAttackNpc(npc)
+                task.wait(1)
+            end
+        else
+            local validItems = FindValidItems()
+            if #validItems > 0 then
+                local randomItem = validItems[math.random(1, #validItems)]
+                TeleportToPosition(randomItem)
+                task.wait(1.5)
+                PressKey(Key1)
+                task.wait(1)
 
-		if Npc then
-			while true do
-				if Npc.Parent and Npc.Parent == LivingFolder then
-					TeleportToNpc(Npc) 
-				else
-					Npc = FindNpc()
-					if not Npc then
-						ReturnToItemLocation()
-						break
-					end
-				end
-				task.wait() 
-			end
-		else
-			local ChestKeys = CheckKey()
-			if #ChestKeys > 0 and not LocalPlayer.Character:FindFirstChild(ChestKey) then
-				EquipKey(ChestKeys[1])
-			end
-
-			if #Players:GetPlayers() == 1 then
-				local CorrectItems = FindItems()
-				if #CorrectItems > 0 then
-					local RandomItem = CorrectItems[math.random(1, #CorrectItems)]
-					if RandomItem and RandomItem ~= Target then
-						Teleport(RandomItem)
-						task.wait(1.5)
-						PressKey(Key1)
-						task.wait(1)
-
-						BreakThroughMastery()
-						UpgradeMastery()
-					end
-				elseif Teleported then
-					ReleaseKey(Key1)
-					Teleported = false
-				end
-				SellItems()
-			end
-		end
-	end
-	task.wait()
+                ReplicatedStorage.GlobalUsedRemotes.Breakthrough:FireServer()
+                ReplicatedStorage.GlobalUsedRemotes.UpgradeMas:FireServer()
+            elseif Teleported then
+                ReleaseKey(Key1)
+                Teleported = false
+            end
+            SellValidItems()
+            EquipChestKey()
+        end
+    end
+    task.wait(1)
 end
-can
