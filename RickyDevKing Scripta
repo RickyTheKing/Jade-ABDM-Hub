@@ -1,116 +1,122 @@
-local LocalPlayer = game.Players.LocalPlayer
+local Players = game.Players
+local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local ItemFolder = game.Workspace:WaitForChild("Item")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local Teleported, Active, Target, LastTeleported = false, false, nil, 0
 
 local Items = {
-	"Arrow", "Bari Bari Devil Fruit", "Barrel", "Bomu Bomu Devil Fruit", "Mysterious Camera",
-	"Hamon Manual", "Haunted Sword", "Mochi Mochi Devil Fruit", "Rokakaka", "Spin Manual", "Stop Sign", "Stone Mask"
+    "Arrow", "Bari Bari Devil Fruit", "Barrel", "Bomu Bomu Devil Fruit", 
+    "Mysterious Camera", "Hamon Manual", "Haunted Sword", "Mochi Mochi Devil Fruit", 
+    "Rokakaka", "Spin Manual", "Stop Sign", "Stone Mask", "New Item"
 }
 
 local ChestKey = "Chest Key"
-
 local Key1 = Enum.KeyCode.E
 local Key2 = Enum.KeyCode.Z
 
-local function CheckKey() 
-	for _, Item in ipairs(LocalPlayer.Backpack:GetChildren()) do
-		if Item:IsA("Tool") and Item.Name == ChestKey then
-			return true, Item
-		end
-	end
-	return false
+local function HasChestKey()
+    for _, item in ipairs(LocalPlayer.Backpack:GetChildren()) do
+        if item:IsA("Tool") and item.Name == ChestKey then
+            return true, item
+        end
+    end
+    return false
 end
 
-local function EquipKey(Item)
-	if Item and not Character:FindFirstChild(Item.Name) then
-		Character:WaitForChild("Humanoid"):EquipTool(Item)
-	end
+local function EquipTool(item)
+    if item and not Character:FindFirstChild(item.Name) then
+        Character:WaitForChild("Humanoid"):EquipTool(item)
+    end
 end
 
-local function Teleport(Part)
-	if Part and Character then
-		Character:SetPrimaryPartCFrame(Part.CFrame)
-		Teleported, Target, LastTeleported = true, Part, tick()
-	end
+local function TeleportToPart(part)
+    if part and Character then
+        Character:SetPrimaryPartCFrame(part.CFrame)
+        Teleported, Target, LastTeleported = true, part, tick()
+    end
 end
 
-local function PressKey1()
-	VirtualInputManager:SendKeyEvent(true, Key1, false, game)
+local function PressKey(key)
+    VirtualInputManager:SendKeyEvent(true, key, false, game)
 end
 
-local function ReleaseKey1()
-	VirtualInputManager:SendKeyEvent(false, Key1, false, game)
+local function ReleaseKey(key)
+    VirtualInputManager:SendKeyEvent(false, key, false, game)
 end
 
-local function FindItems()
-	local Items, GoodItems = ItemFolder:GetChildren(), {}
-	local ChestKeyEX, chestKeyItem = CheckKey()
+local function FindValidItems()
+    local allItems = ItemFolder:GetChildren()
+    local validItems = {}
+    local chestKeyExists, chestKeyItem = HasChestKey()
 
-	for _, Item in ipairs(Items) do
-		if Item:IsA("BasePart") then
-			if ChestKeyEX and Item.Name == "Chest" then
-				table.insert(GoodItems, Item)
-			elseif not ChestKeyEX and Item.Name == "Box" then
-				table.insert(GoodItems, Item)
-			end
-		end
-	end
-	return GoodItems
+    for _, item in ipairs(allItems) do
+        if item:IsA("BasePart") then
+            if chestKeyExists and item.Name == "Chest" then
+                table.insert(validItems, item)
+            elseif not chestKeyExists and (item.Name == "Box" or item.Name == "Barrel") then
+                table.insert(validItems, item)
+            elseif item.Name == "New Item" then
+                table.insert(validItems, item)
+            end
+        end
+    end
+    return validItems
 end
 
 local function SellItems()
-	for _, Item in ipairs(LocalPlayer.Backpack:GetChildren()) do
-		if Item:IsA("Tool") then
-			for _, RickyItem in ipairs(Items) do
-				if Item.Name == RickyItem then
-					game.ReplicatedStorage.GlobalUsedRemotes.SellItem:FireServer(Item.Name)
-					break
-				end
-			end
-		end
-	end
+    for _, item in ipairs(LocalPlayer.Backpack:GetChildren()) do
+        if item:IsA("Tool") then
+            for _, validItemName in ipairs(Items) do
+                if item.Name == validItemName then
+                    ReplicatedStorage.GlobalUsedRemotes.SellItem:FireServer(item.Name)
+                    break
+                end
+            end
+        end
+    end
 end
 
-local function Noti(Title2, Msg, Time)
-	game:GetService("StarterGui"):SetCore("SendNotification", {Title = Title2, Text = Msg, Duration = Time})
+local function ShowNotification(title, message, duration)
+    game:GetService("StarterGui"):SetCore("SendNotification", {Title = title, Text = message, Duration = duration})
 end
 
-UserInputService.InputBegan:Connect(function(Input)
-	if Input.UserInputType == Enum.UserInputType.Keyboard and Input.KeyCode == Key2 then
-		Active = not Active
-		local state = Active and "Activated" or "Deactivated"
-		Noti("Script " .. state, "Press 'Z' again to " .. (Active and "stop" or "start") .. ".", 5)
-	end
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Key2 then
+        Active = not Active
+        local state = Active and "Activated" or "Deactivated"
+        ShowNotification("Script " .. state, "Press 'Z' again to " .. (Active and "stop" or "start") .. ".", 5)
+    end
 end)
 
-Noti("Sakura Stand Farming Script 2025", "Made By RickyDevKing", 5)
+ShowNotification("Sakura Stand Farming Script 2025", "Made by RickyDevKing", 5)
 
 while true do
-	if Active then
-		local ChestKeyEX, chestKeyItem = CheckKey()
-		if ChestKeyEX and not Character:FindFirstChild(ChestKey) then
-			EquipKey(chestKeyItem) 
-		end
+    if Active then
+        local chestKeyExists, chestKeyItem = HasChestKey()
+        if chestKeyExists and not Character:FindFirstChild(ChestKey) then
+            EquipTool(chestKeyItem)
+        end
 
-		if #game.Players:GetPlayers() == 1 then
-			local GoodItems = FindItems()
-			if #GoodItems > 0 then
-				local RandomItem = GoodItems[math.random(1, #GoodItems)]
-				if RandomItem and RandomItem ~= Target then
-					Teleport(RandomItem)
-					task.wait(1.5)
-					PressKey1()
-					task.wait(1)
-				end
-			elseif Teleported then
-				ReleaseKey1()
-				Teleported = false
-			end
-			SellItems()
-		end
-	end
-	task.wait() 
+        if #Players:GetPlayers() == 1 then
+            local validItems = FindValidItems()
+            if #validItems > 0 then
+                local randomItem = validItems[math.random(1, #validItems)]
+                if randomItem and randomItem ~= Target then
+                    TeleportToPart(randomItem)
+                    task.wait(1.5)
+                    PressKey(Key1)
+                    task.wait(1)
+                end
+            elseif Teleported then
+                ReleaseKey(Key1)
+                Teleported = false
+            end
+            SellItems()
+        end
+    end
+    task.wait()
 end
