@@ -73,16 +73,18 @@ local function FindItems()
 
 	for _, Item in ipairs(ItemFolder:GetChildren()) do
 		if Item:IsA("BasePart") then
+			-- Only add chests to the list if the player has the Chest Key
 			if #ChestKeys > 0 and Item.Name == "Chest" then
 				table.insert(GoodItems, Item)
-			elseif #ChestKeys == 0 and (Item.Name == "Box" or Item.Name == "Barrel" or Item.Name == "BoxDrop1" or Item.Name == "BoxDrop2" or Item.Name == "BoxDrop3" or Item.Name == "BoxDrop4" or Item.Name == "BoxDrop5" or Item.Name == "BoxDrop6"  or Item.Name == "SukunaFinger") then
-	table.insert(GoodItems, Item)
-elseif Item.Name == "New Item" then
-	table.insert(GoodItems, Item)
-end
-end
-end
-return GoodItems
+			-- Add other valid items to the list regardless of having the Chest Key
+			elseif #ChestKeys == 0 and (Item.Name == "Box" or Item.Name == "Barrel" or Item.Name == "BoxDrop1" or Item.Name == "BoxDrop2" or Item.Name == "BoxDrop3" or Item.Name == "BoxDrop4" or Item.Name == "BoxDrop5" or Item.Name == "BoxDrop6" or Item.Name == "SukunaFinger") then
+				table.insert(GoodItems, Item)
+			elseif Item.Name == "New Item" then
+				table.insert(GoodItems, Item)
+			end
+		end
+	end
+	return GoodItems
 end
 
 local function SellItems()
