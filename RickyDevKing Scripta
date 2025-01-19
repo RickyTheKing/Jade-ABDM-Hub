@@ -47,13 +47,13 @@ end
 
 local function FindItems()
 	local Items, GoodItems = ItemFolder:GetChildren(), {}
-	local chestKeyExists, chestKeyItem = CheckKey()
+	local ChestKeyEX, chestKeyItem = CheckKey()
 
 	for _, Item in ipairs(Items) do
 		if Item:IsA("BasePart") then
-			if chestKeyExists and Item.Name == "Chest" then
+			if ChestKeyEX and Item.Name == "Chest" then
 				table.insert(GoodItems, Item)
-			elseif not chestKeyExists and Item.Name == "Box" then
+			elseif not ChestKeyEX and Item.Name == "Box" then
 				table.insert(GoodItems, Item)
 			end
 		end
@@ -90,6 +90,11 @@ Noti("Sakura Stand Farming Script 2025", "Made By RickyDevKing", 5)
 
 while true do
 	if Active then
+		local ChestKeyEX, chestKeyItem = CheckKey()
+		if ChestKeyEX and not Character:FindFirstChild(ChestKey) then
+			EquipKey(chestKeyItem) 
+		end
+
 		if #game.Players:GetPlayers() == 1 then
 			local GoodItems = FindItems()
 			if #GoodItems > 0 then
