@@ -16,7 +16,7 @@ local Items = {
 
 local Npcs = {
 	"Thug", "Bandit", "Glutton Curse", "Mosquito Curse", 
-	"Contorted Curse", "Spider Curse", "Paper Curse"
+	"Contorted Curse", "Spider Curse", "Paper Curse", "Frog Hollow", "Fishbone"
 }
 
 local ChestKey = "Chest Key"
