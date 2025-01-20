@@ -5,8 +5,10 @@ local LivingFolder = game.Workspace:WaitForChild("Living")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Debris = game:GetService("Debris")
 
 local Teleported, Active, Target, LastTeleported = false, false, nil, 0
+local TeleportCooldown = 2
 
 local Items = {
     "Arrow", "Bari Bari Devil Fruit", "Barrel", "Bomu Bomu Devil Fruit", 
@@ -21,6 +23,7 @@ local Npcs = {
 
 local Key1 = Enum.KeyCode.E
 local Key2 = Enum.KeyCode.Z
+local KeyM = Enum.KeyCode.M
 
 local GoodItems = {}
 
@@ -33,7 +36,7 @@ end
 
 local function TeleportToPosition(Position)
     local Character = LocalPlayer.Character
-    if Position and Character then
+    if Position and Character and tick() - LastTeleported > TeleportCooldown then
         Character:SetPrimaryPartCFrame(Position.CFrame)
         Teleported, Target, LastTeleported = true, Position, tick()
     end
@@ -47,16 +50,10 @@ local function ReleaseKey(key)
     VirtualInputManager:SendKeyEvent(false, key, false, game)
 end
 
-local function ShowNotification(title, message, duration)
-    game:GetService("StarterGui"):SetCore("SendNotification", {Title = title, Text = message, Duration = duration})
-end
-
-local function FindValidItems()
+local function FindValidItemsWithPrompt()
     local validItems = {}
     for _, item in ipairs(ItemFolder:GetChildren()) do
-        if item:IsA("BasePart") and (
-            item.Name:match("Box") or item.Name == "SukunaFinger" or item.Name == "Chest" or item.Name == "New Item" or
-            item.Name:match("BoxDrop%d") ) then
+        if item:IsA("BasePart") and item:FindFirstChild("ProximityPrompt") then
             table.insert(validItems, item)
         end
     end
@@ -118,7 +115,7 @@ local function TeleportAndAttackNpc(Npc)
 end
 
 local function ReturnToItemLocation()
-    local ValidItems = FindValidItems()
+    local ValidItems = FindValidItemsWithPrompt()
     if #ValidItems > 0 then
         local RandomItem = ValidItems[math.random(1, #ValidItems)]
         if RandomItem and RandomItem ~= Target then
@@ -128,14 +125,12 @@ local function ReturnToItemLocation()
 end
 
 UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Key2 then
-        Active = not Active
-        local state = Active and "Activated" or "Deactivated"
-        ShowNotification("Script " .. state, "Press 'Z' again to " .. (Active and "stop" or "start") .. ".", 5)
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == Key2 then
+            Active = not Active
+        end
     end
 end)
-
-ShowNotification("Sakura Stand Farming Script 2025", "Made by RickyDevKing", 5)
 
 LocalPlayer.CharacterAdded:Connect(function()
     InitializeCharacter()
@@ -146,28 +141,20 @@ while true do
         local Npc = FindNpc()
 
         if Npc then
-            while true do
-                if Npc.Parent and Npc.Parent == LivingFolder then
-                    TeleportAndAttackNpc(Npc)
-                else
-                    Npc = FindNpc()
-                    if not Npc then
-                        ReturnToItemLocation()
-                        break
-                    end
-                end
+            while Npc and Npc.Parent == LivingFolder and Npc:FindFirstChild("Humanoid") and Npc.Humanoid.Health > 0 do
+                TeleportAndAttackNpc(Npc)
                 task.wait()
             end
         else
             if #Players:GetPlayers() == 1 then
-                local ValidItems = FindValidItems()
+                local ValidItems = FindValidItemsWithPrompt()
                 if #ValidItems > 0 then
                     local RandomItem = ValidItems[math.random(1, #ValidItems)]
                     if RandomItem and RandomItem ~= Target then
                         TeleportToPosition(RandomItem)
-                        task.wait(1.15)
+                        task.wait(1.05)
                         PressKey(Key1)
-                        task.wait(1)
+                        task.wait()
 
                         BreakthroughMastery()
                         UpgradeMastery()
