@@ -154,16 +154,14 @@ while true do
                         TeleportToPosition(RandomItem)
                         task.wait(1.05)
                         PressKey(Key1)
-                        task.wait()
-
                         BreakthroughMastery()
                         UpgradeMastery()
+						SellValidItems()
                     end
                 elseif Teleported then
                     ReleaseKey(Key1)
                     Teleported = false
                 end
-                SellValidItems()
             end
         end
     end
